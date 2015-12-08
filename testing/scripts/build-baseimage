@@ -121,7 +121,12 @@ fi
 for service in $SERVICES
 do
 	log_action "Disabling service $service"
-	execute_chroot "update-rc.d -f $service remove"
+	if [ "$BASEIMGSUITE" == "wheezy" ]
+	then
+		execute_chroot "update-rc.d -f $service remove"
+	else
+		execute_chroot "systemctl disable $service"
+	fi
 done
 
 log_action "Disabling root password"
