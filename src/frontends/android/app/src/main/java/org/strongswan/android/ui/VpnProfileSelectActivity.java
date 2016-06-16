@@ -19,8 +19,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import org.strongswan.android.R;
-import org.strongswan.android.data.VpnProfile;
+
+import com.fancyfon.strongswan.R;
+
+
+import org.strongswan.android.data.fancyfon.VpnProfile;
 import org.strongswan.android.ui.VpnProfileListFragment.OnVpnProfileSelectedListener;
 
 public class VpnProfileSelectActivity extends AppCompatActivity implements OnVpnProfileSelectedListener

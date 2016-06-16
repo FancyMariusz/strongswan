@@ -22,6 +22,7 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.KeyStoreException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
@@ -29,13 +30,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.strongswan.android.data.VpnProfile;
-import org.strongswan.android.data.VpnProfileDataSource;
+
 import org.strongswan.android.data.VpnType.VpnTypeFeature;
+import org.strongswan.android.data.fancyfon.VpnProfile;
+import org.strongswan.android.data.fancyfon.VpnProfileDataSource;
 import org.strongswan.android.logic.VpnStateService.ErrorState;
 import org.strongswan.android.logic.VpnStateService.State;
 import org.strongswan.android.logic.imc.ImcState;
 import org.strongswan.android.logic.imc.RemediationInstruction;
+import org.strongswan.android.security.fancyfon.LocalKeystore;
 import org.strongswan.android.ui.MainActivity;
 import org.strongswan.android.utils.SettingsWriter;
 
@@ -46,6 +49,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.Bundle;
@@ -65,6 +69,7 @@ public class CharonVpnService extends VpnService implements Runnable
 	private VpnProfileDataSource mDataSource;
 	private Thread mConnectionHandler;
 	private VpnProfile mCurrentProfile;
+	private volatile String mCurrentCertificateId;
 	private volatile String mCurrentCertificateAlias;
 	private volatile String mCurrentUserCertificateAlias;
 	private VpnProfile mNextProfile;
@@ -214,26 +219,27 @@ public class CharonVpnService extends VpnService implements Runnable
 
 						/* store this in a separate (volatile) variable to avoid
 						 * a possible deadlock during deinitialization */
+						mCurrentCertificateId = mCurrentProfile.getCertificateId();
 						mCurrentCertificateAlias = mCurrentProfile.getCertificateAlias();
 						mCurrentUserCertificateAlias = mCurrentProfile.getUserCertificateAlias();
 
 						startConnection(mCurrentProfile);
 						mIsDisconnecting = false;
 
-						BuilderAdapter builder = new BuilderAdapter(mCurrentProfile.getName(), mCurrentProfile.getSplitTunneling());
+						BuilderAdapter builder = new BuilderAdapter(mCurrentProfile);
 						if (initializeCharon(builder, mLogFile, mCurrentProfile.getVpnType().has(VpnTypeFeature.BYOD)))
 						{
 							Log.i(TAG, "charon started");
 							SettingsWriter writer = new SettingsWriter();
-							writer.setValue("global.language", Locale.getDefault().getLanguage());
-							writer.setValue("global.mtu", mCurrentProfile.getMTU());
+						//	writer.setValue("global.language", Locale.getDefault().getLanguage());
+						//	writer.setValue("global.mtu", mCurrentProfile.getMTU());
 							writer.setValue("connection.type", mCurrentProfile.getVpnType().getIdentifier());
 							writer.setValue("connection.server", mCurrentProfile.getGateway());
-							writer.setValue("connection.port", mCurrentProfile.getPort());
+							//writer.setValue("connection.port", mCurrentProfile.getPort());
 							writer.setValue("connection.username", mCurrentProfile.getUsername());
 							writer.setValue("connection.password", mCurrentProfile.getPassword());
-							writer.setValue("connection.local_id", mCurrentProfile.getLocalId());
-							writer.setValue("connection.remote_id", mCurrentProfile.getRemoteId());
+							//writer.setValue("connection.local_id", mCurrentProfile.getLocalId());
+							//writer.setValue("connection.remote_id", mCurrentProfile.getRemoteId());
 							initiate(writer.serialize());
 						}
 						else
@@ -441,7 +447,7 @@ public class CharonVpnService extends VpnService implements Runnable
 	 *
 	 * @return a list of DER encoded CA certificates
 	 */
-	private byte[][] getTrustedCertificates()
+	/*private byte[][] getTrustedCertificates()
 	{
 		ArrayList<byte[]> certs = new ArrayList<byte[]>();
 		TrustedCertificateManager certman = TrustedCertificateManager.getInstance();
@@ -471,6 +477,27 @@ public class CharonVpnService extends VpnService implements Runnable
 			return null;
 		}
 		return certs.toArray(new byte[certs.size()][]);
+	}*/
+
+	private byte[][] getTrustedCertificates()
+	{
+		ArrayList<byte[]> certs = new ArrayList<byte[]>();
+		try
+		{
+			LocalKeystore keystore = new LocalKeystore();
+			X509Certificate cert = keystore.getCertificate(mCurrentCertificateId,
+					mCurrentCertificateAlias);
+			certs.add(cert.getEncoded());
+		}
+		catch (CertificateEncodingException e)
+		{
+			e.printStackTrace();
+			return null;
+		} catch (KeyStoreException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return certs.toArray(new byte[certs.size()][]);
 	}
 
 	/**
@@ -485,7 +512,7 @@ public class CharonVpnService extends VpnService implements Runnable
 	 * @throws KeyChainException
 	 * @throws CertificateEncodingException
 	 */
-	private byte[][] getUserCertificate() throws KeyChainException, InterruptedException, CertificateEncodingException
+	/*private byte[][] getUserCertificate() throws KeyChainException, InterruptedException, CertificateEncodingException
 	{
 		ArrayList<byte[]> encodings = new ArrayList<byte[]>();
 		X509Certificate[] chain = KeyChain.getCertificateChain(getApplicationContext(), mCurrentUserCertificateAlias);
@@ -498,7 +525,29 @@ public class CharonVpnService extends VpnService implements Runnable
 			encodings.add(cert.getEncoded());
 		}
 		return encodings.toArray(new byte[encodings.size()][]);
+	}*/
+
+	private byte[][] getUserCertificate() throws KeyChainException, InterruptedException, CertificateEncodingException
+	{
+		ArrayList<byte[]> encodings = new ArrayList<byte[]>();
+		X509Certificate[] chain = null;
+		try {
+			LocalKeystore localKeystore = new LocalKeystore();
+			chain = localKeystore.getCertificateChain(mCurrentCertificateId, mCurrentUserCertificateAlias);
+		} catch (KeyStoreException e) {
+			throw new KeyChainException();
+		}
+		if (chain == null || chain.length == 0)
+		{
+			return null;
+		}
+		for (X509Certificate cert : chain)
+		{
+			encodings.add(cert.getEncoded());
+		}
+		return encodings.toArray(new byte[encodings.size()][]);
 	}
+
 
 	/**
 	 * Function called via JNI to get the private key the user selected.
@@ -513,7 +562,12 @@ public class CharonVpnService extends VpnService implements Runnable
 	 */
 	private PrivateKey getUserKey() throws KeyChainException, InterruptedException
 	{
-		return KeyChain.getPrivateKey(getApplicationContext(), mCurrentUserCertificateAlias);
+		try {
+			LocalKeystore localKeystore = new LocalKeystore();
+			return localKeystore.getPrivateKey(mCurrentCertificateId, mCurrentUserCertificateAlias);
+		} catch (KeyStoreException e) {
+			throw new KeyChainException();
+		}
 	}
 
 	/**
@@ -548,19 +602,33 @@ public class CharonVpnService extends VpnService implements Runnable
 		private BuilderCache mCache;
 		private BuilderCache mEstablishedCache;
 
-		public BuilderAdapter(String name, Integer splitTunneling)
+		//ff
+		private final VpnProfile profile;
+
+		public BuilderAdapter(VpnProfile profile)
 		{
-			mName = name;
-			mSplitTunneling = splitTunneling;
-			mBuilder = createBuilder(name);
+			this.profile = profile;
+			mName = profile.getName();
+			mSplitTunneling = profile.getSplitTunneling();
+			mBuilder = createBuilder();
 			mCache = new BuilderCache(mSplitTunneling);
 		}
 
-		private VpnService.Builder createBuilder(String name)
+		private VpnService.Builder createBuilder()
 		{
 			VpnService.Builder builder = new CharonVpnService.Builder();
 			builder.setSession(mName);
-
+			//ff allowed apps
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+				ArrayList<String> allowedApplications = profile.getAllowedApplications();
+				for (String s : allowedApplications) {
+					try {
+						builder.addAllowedApplication(s);
+					} catch (PackageManager.NameNotFoundException ex) {
+						Log.w(TAG, "Failed to add packageName: " + s + " to allowed applications list for vpn profile: " + mName, ex);
+					}
+				}
+			}
 			/* even though the option displayed in the system dialog says "Configure"
 			 * we just use our main Activity */
 			Context context = getApplicationContext();
@@ -570,6 +638,7 @@ public class CharonVpnService extends VpnService implements Runnable
 			builder.setConfigureIntent(pending);
 			return builder;
 		}
+
 
 		public synchronized boolean addAddress(String address, int prefixLength)
 		{
@@ -656,7 +725,7 @@ public class CharonVpnService extends VpnService implements Runnable
 			}
 			/* now that the TUN device is created we don't need the current
 			 * builder anymore, but we might need another when reestablishing */
-			mBuilder = createBuilder(mName);
+			mBuilder = createBuilder();
 			mEstablishedCache = mCache;
 			mCache = new BuilderCache(mSplitTunneling);
 			return fd.detachFd();
@@ -672,7 +741,7 @@ public class CharonVpnService extends VpnService implements Runnable
 			}
 			try
 			{
-				Builder builder = createBuilder(mName);
+				Builder builder = createBuilder();
 				mEstablishedCache.applyData(builder);
 				fd = builder.establish();
 			}

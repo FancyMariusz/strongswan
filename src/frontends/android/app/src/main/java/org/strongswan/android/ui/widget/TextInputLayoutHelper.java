@@ -31,7 +31,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.strongswan.android.R;
+import com.fancyfon.strongswan.R;
+
 
 /**
  * Layout that extends {@link android.support.design.widget.TextInputLayout} with a helper text

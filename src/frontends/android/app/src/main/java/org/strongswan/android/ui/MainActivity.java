@@ -43,10 +43,12 @@ import android.view.Window;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.strongswan.android.R;
-import org.strongswan.android.data.VpnProfile;
-import org.strongswan.android.data.VpnProfileDataSource;
+import com.fancyfon.strongswan.R;
+
+
 import org.strongswan.android.data.VpnType.VpnTypeFeature;
+import org.strongswan.android.data.fancyfon.VpnProfile;
+import org.strongswan.android.data.fancyfon.VpnProfileDataSource;
 import org.strongswan.android.logic.CharonVpnService;
 import org.strongswan.android.logic.TrustedCertificateManager;
 import org.strongswan.android.logic.VpnStateService;

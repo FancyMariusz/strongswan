@@ -36,8 +36,10 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.strongswan.android.R;
-import org.strongswan.android.data.VpnProfile;
+import com.fancyfon.strongswan.R;
+
+
+import org.strongswan.android.data.fancyfon.VpnProfile;
 import org.strongswan.android.logic.VpnStateService;
 import org.strongswan.android.logic.VpnStateService.ErrorState;
 import org.strongswan.android.logic.VpnStateService.State;

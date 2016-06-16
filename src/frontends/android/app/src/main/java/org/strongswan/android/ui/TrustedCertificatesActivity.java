@@ -30,7 +30,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import org.strongswan.android.R;
+import com.fancyfon.strongswan.R;
+
 import org.strongswan.android.data.VpnProfileDataSource;
 import org.strongswan.android.logic.TrustedCertificateManager;
 import org.strongswan.android.logic.TrustedCertificateManager.TrustedCertificateSource;

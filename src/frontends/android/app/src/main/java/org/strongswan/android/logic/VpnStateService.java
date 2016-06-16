@@ -21,7 +21,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.strongswan.android.data.VpnProfile;
+
+import org.strongswan.android.data.fancyfon.VpnProfile;
 import org.strongswan.android.logic.imc.ImcState;
 import org.strongswan.android.logic.imc.RemediationInstruction;
 

@@ -54,7 +54,9 @@ import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import org.strongswan.android.R;
+
+import com.fancyfon.strongswan.R;
+
 import org.strongswan.android.data.VpnProfile;
 import org.strongswan.android.data.VpnProfileDataSource;
 import org.strongswan.android.data.VpnType;

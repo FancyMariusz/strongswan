@@ -37,7 +37,8 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.strongswan.android.R;
+import com.fancyfon.strongswan.R;
+
 import org.strongswan.android.logic.VpnStateService;
 import org.strongswan.android.logic.VpnStateService.VpnStateListener;
 import org.strongswan.android.logic.imc.ImcState;

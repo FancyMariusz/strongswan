@@ -19,7 +19,9 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 
-import org.strongswan.android.R;
+import com.fancyfon.strongswan.R;
+
+
 import org.strongswan.android.logic.imc.RemediationInstruction;
 import org.strongswan.android.ui.RemediationInstructionsFragment.OnRemediationInstructionSelectedListener;
 

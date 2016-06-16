@@ -23,7 +23,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import org.strongswan.android.R;
+
+import com.fancyfon.strongswan.R;
+
 import org.strongswan.android.data.LogContentProvider;
 import org.strongswan.android.logic.CharonVpnService;
 

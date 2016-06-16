@@ -24,7 +24,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import org.strongswan.android.R;
+import com.fancyfon.strongswan.R;
+
 import org.strongswan.android.logic.CharonVpnService;
 
 import java.io.BufferedReader;

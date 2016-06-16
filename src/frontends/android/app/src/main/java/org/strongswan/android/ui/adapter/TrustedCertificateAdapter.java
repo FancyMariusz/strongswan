@@ -17,7 +17,6 @@ package org.strongswan.android.ui.adapter;
 
 import java.util.List;
 
-import org.strongswan.android.R;
 import org.strongswan.android.security.TrustedCertificateEntry;
 
 import android.content.Context;
@@ -26,6 +25,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+import com.fancyfon.strongswan.R;
 
 public class TrustedCertificateAdapter extends ArrayAdapter<TrustedCertificateEntry>
 {
